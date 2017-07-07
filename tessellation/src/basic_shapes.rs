@@ -714,6 +714,27 @@ pub fn stroke_circle<Output>(center: Point, radius: f32, tolerance: f32, output:
     return output.end_geometry();
 }
 
+// produce an iterator of points where the outer points are not included.
+// currently uses trait object, could use 'impl Iterator<item = point>' once available.
+fn round_border_iter(
+    center: Point,
+    angle: (f32, f32),
+    radius: f32,
+    num_points: u32,
+) -> Box<Iterator<Item = Point>> {
+    let angle_size = (angle.0 - angle.1).abs();
+    let starting_angle = angle.0.min(angle.1);
+
+    let points = (1..num_points + 1).map(move |i| {
+        let new_angle = i as f32 * (angle_size) / (num_points + 1) as f32 + starting_angle;
+        let normal =
+        vec2(new_angle.cos(),
+        new_angle.sin());
+        center + normal * radius
+    });
+    Box::new(points)
+}
+
 /// Tessellate a convex polyline.
 // We insert 2nd point on line first in order to have the neighbours for normal calculation.
 pub fn fill_convex_polyline<Iter, Output>(mut it: Iter, output: &mut Output) -> Count
